@@ -1,8 +1,8 @@
 {
 	"manifest_version": 1,
 	"id": "com.remove.images.from.note",
-	"app_min_version": "2.7",
-	"version": "1.0.0",
+	"app_min_version": "2.6",
+	"version": "0.0.1",
 	"name": "Remove Images",
 	"description": "Allows to remove images from selected note",
 	"author": "mak2002",
