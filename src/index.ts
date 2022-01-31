@@ -6,36 +6,44 @@ joplin.plugins.register({
 
 		async function removeImages() {
 			const note = await joplin.workspace.selectedNote();
-			const regexMarkdown = /!\[(.*?)\]\((.*?)\)/g;
-			const regexHtml = /<img([\w\W]+?)\/>/g;
+			
+			const regexMarkdownImgWithHyperlink = /\[?(!)(\[[^\]\[]*\[?[^\]\[]*\]?[^\]\[]*)\]\(([^\s]+?)(?:\s+(["'])(.*?)\4)?\)/; // [ ![alt-text](:/path-to-file)(link) ]
+			const regexHTMLImgWithHyperlink = /\[<img([\w\W]+?)\/>\]\((.*?)\)/; // [<img src=":/12345"/>](link)
+			const regexMarkdown = /!\[(.*?)\]\((.*?)\)/; // ![alt-text](:/path-to-file)
+			const regexHtml = /<img([\w\W]+?)\/>/; // <img src=""/>
 
 			
 			if (note) {
 				var noteBody = note.body;
 
 				let match;
+				let result;
+				let newNoteBody = note.body;
 
-				// first check for images in markdown format
-				let result = noteBody.matchAll(regexMarkdown);
+				// combine all the regex
+				var rgx = new RegExp([regexMarkdownImgWithHyperlink, regexHTMLImgWithHyperlink, regexMarkdown, regexHtml].map(function(r){
+					return (r+"").replace(/\//g,"");
+				}).join("|"), "g");
+			
+				let m;
 
-				for (match of result) {
-					console.log(match[0]);
-					noteBody = noteBody.replace(`${match[0]}`,'');
+				while ((m = rgx.exec(noteBody)) !== null) {
+
+					// to avoid to avoid infinite loops with zero-width matches
+					if (m.index === rgx.lastIndex) {
+						rgx.lastIndex++;
+					}
+					
+					
+					m.forEach((match, groupIndex) => {
+						if(groupIndex === 0 && groupIndex !== undefined) {
+							newNoteBody = newNoteBody.replace(`${match}`,'');
+						}
+					});
 				}
-
 				await joplin.commands.execute("textSelectAll");
-				await joplin.commands.execute("replaceSelection", noteBody);
+				await joplin.commands.execute("replaceSelection", newNoteBody);
 
-				// first check for images in HTML format
-				result = noteBody.matchAll(regexHtml);
-
-				for (match of result) {
-					console.log(match[0]);
-					noteBody = noteBody.replace(`${match[0]}`,'');
-				}
-
-				await joplin.commands.execute("textSelectAll");
-				await joplin.commands.execute("replaceSelection", noteBody);
 
 			} else {
 				console.log("-----Note not loaded-----")
