@@ -27,6 +27,7 @@ joplin.plugins.register({
 			
 				let m;
 
+				// below code is taken from regex 101's code generator  
 				while ((m = rgx.exec(noteBody)) !== null) {
 
 					// to avoid to avoid infinite loops with zero-width matches
